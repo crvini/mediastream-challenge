@@ -1,8 +1,12 @@
 import './assets/styles.css'
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { countDuplicatesItemArray, removeArrayDuplicates, removeItemArray } from '../../../utils/arrays'
+import { STORAGE_PRODUCTS_CART } from './utils/consts'
 
 export default function Exercise01 () {
-  const movies = [
+  const [singelProductsCart, setSingelProductsCart] = useState([])
+  const [cartTotalPrice, setCartTotalPrice] = useState(0)
+  const products  = [
     {
       id: 1,
       name: 'Star Wars',
@@ -24,39 +28,73 @@ export default function Exercise01 () {
       price: 5
     }
   ]
+  const [productsCart, setProductsCart] = useState([])
+  const getProductsCart = () => {
+    const idsProducts = localStorage.getItem(STORAGE_PRODUCTS_CART)
 
-  const discountRules = [
-    {
-      m: [3, 2],
-      discount: 0.25
-    },
-    {
-      m: [2, 4, 1],
-      discount: 0.5
-    },
-    {
-      m: [4, 2],
-      discount: 0.1
+    if (idsProducts) {
+      const idsProductsSplit = idsProducts.split(',')
+      setProductsCart(idsProductsSplit)
+    } else {
+      setProductsCart([])
     }
-  ]
+  }
 
-  const [cart, setCart] = useState([
-    {
-      id: 1,
-      name: 'Star Wars',
-      price: 20,
-      quantity: 2
-    }
-  ])
+  const addProductCart = (id) => {
+    const idsProducts = productsCart
+    idsProducts.push(id)
+    setProductsCart(idsProducts)
+    localStorage.setItem(STORAGE_PRODUCTS_CART, idsProducts)
+    getProductsCart()
+  }
 
-  const getTotal = () => 0 // TODO: Implement this
+  const increaseQuantity = id => {
+    const arrayItemsCart = productsCart
+    arrayItemsCart.push(id)
+    localStorage.setItem(STORAGE_PRODUCTS_CART, arrayItemsCart)
+    getProductsCart()
+  }
+  const decreaseQuantity = id => {
+    const arrayItemsCart = productsCart
+    const result = removeItemArray(arrayItemsCart, id.toString())
+    localStorage.setItem(STORAGE_PRODUCTS_CART, result)
+    getProductsCart()
+  }
+  useEffect(() => {
+    const allProductsId = removeArrayDuplicates(productsCart)
+    setSingelProductsCart(allProductsId)
+  }, [productsCart])
+
+  useEffect(() => {
+    const productData = []
+    let totalPrice = 0
+
+    const allProductsId = removeArrayDuplicates(productsCart)
+    allProductsId.forEach(productId => {
+      const quantity = countDuplicatesItemArray(productId, productsCart)
+      const productValue = {
+        id: productId,
+        quantity: quantity
+      }
+      productData.push(productValue)
+    })
+    products.forEach(product => {
+      productData.forEach(item => {
+        if (product.id == item.id) {
+          const totalValue = product.price * item.quantity
+          totalPrice = totalPrice + totalValue
+        }
+      })
+    })
+    setCartTotalPrice(totalPrice)
+  }, [productsCart, products])
 
   return (
     <section className="exercise01">
       <div className="movies__list">
         <ul>
-          {movies.map(o => (
-            <li className="movies__list-card">
+          {products.map((o) => (
+            <li key={o.id} className="movies__list-card">
               <ul>
                 <li>
                   ID: {o.id}
@@ -68,7 +106,7 @@ export default function Exercise01 () {
                   Price: ${o.price}
                 </li>
               </ul>
-              <button onClick={() => console.log('Add to cart', o)}>
+              <button onClick={() => addProductCart(o.id)}>
                 Add to cart
               </button>
             </li>
@@ -77,35 +115,42 @@ export default function Exercise01 () {
       </div>
       <div className="movies__cart">
         <ul>
-          {cart.map(x => (
-            <li className="movies__cart-card">
-              <ul>
-                <li>
-                  ID: {x.id}
-                </li>
-                <li>
-                  Name: {x.name}
-                </li>
-                <li>
-                  Price: ${x.price}
-                </li>
-              </ul>
-              <div className="movies__cart-card-quantity">
-                <button onClick={() => console.log('Decrement quantity', x)}>
+          {!singelProductsCart ? (<h1>cargando</h1>) : ( (singelProductsCart.map((idProductCart) => (
+
+            products.map((o)=>(
+    
+              (o.id == idProductCart) ? ( (
+        
+                <li key={o.id} className="movies__list-card">
+                  <ul>
+                    <li>
+                     ID: {idProductCart}
+                    </li>
+                    <li>
+                Name: {o.name}
+                    </li>
+                    <li>
+                Price: ${o.price}
+                    </li>
+                  </ul>
+                  <span>
+                    {countDuplicatesItemArray(o.id, productsCart)}
+                  </span>
+                  <div className="movies__cart-card-quantity">
+                    <button onClick={() => decreaseQuantity(o.id)}>
                   -
-                </button>
-                <span>
-                  {x.quantity}
-                </span>
-                <button onClick={() => console.log('Increment quantity', x)}>
+                    </button>
+            
+                    <button onClick={() => increaseQuantity(o.id)}>
                   +
-                </button>
-              </div>
-            </li>
-          ))}
+                    </button>
+                  </div>
+                </li>
+              )) : (<></>)
+            )   ))) ))}
         </ul>
         <div className="movies__cart-total">
-          <p>Total: ${getTotal()}</p>
+          <p>Total: ${cartTotalPrice.toFixed(2)}</p>
         </div>
       </div>
     </section>

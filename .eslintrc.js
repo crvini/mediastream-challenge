@@ -7,8 +7,7 @@ module.exports = {
   },
   extends: [
     'plugin:react/recommended',
-    'plugin:jest/recommended',
-    'standard'
+    'plugin:jest/recommended'
   ],
   parserOptions: {
     ecmaFeatures: {
@@ -20,5 +19,9 @@ module.exports = {
     'react', 'react-hooks', 'jest'
   ],
   rules: {
+    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "no-console": 0,
+    "quotes": ["error", "single"],
+    "semi": ["error", "never"]
   }
 }
